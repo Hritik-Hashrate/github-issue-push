@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Create GitHub Issue</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f6f8fa;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 7px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* =========================
+           DESCRIPTION EDITOR
+        ========================= */
+
+        .editor-container {
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 5px;
+            padding: 8px;
+            background: #f6f8fa;
+            border-bottom: 1px solid #d0d7de;
+            flex-wrap: wrap;
+        }
+
+        .toolbar button {
+            background: white;
+            border: 1px solid #d0d7de;
+            border-radius: 5px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .toolbar button:hover {
+            background: #eaeef2;
+        }
+
+        #descriptionEditor {
+            width: 100%;
+            min-height: 250px;
+            border: none;
+            padding: 15px;
+            box-sizing: border-box;
+            resize: vertical;
+            outline: none;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .submit-button {
+            background: #24292f;
+            color: white;
+            border: none;
+            padding: 11px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .submit-button:hover {
+            background: #1f2328;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+    <h2>Create GitHub Issue</h2>
+
+
+    <!-- =========================
+         MESSAGES
+    ========================== -->
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <p class="{{ message.tags }}">
+                {{ message }}
+            </p>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <!-- =========================
+         ISSUE LINK
+    ========================== -->
+
+    {% if issue_url %}
+
+        <p>
+
+            <a
+                href="{{ issue_url }}"
+                target="_blank"
+            >
+                View GitHub Issue
+            </a>
+
+        </p>
+
+    {% endif %}
+
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+
+        <!-- =========================
+             TITLE
+        ========================== -->
+
+        <div class="form-group">
+
+            <label>
+                Issue Title
+            </label>
+
+            <input
+                type="text"
+                name="title"
+                placeholder="Enter issue title"
+                required
+            >
+
+        </div>
+
+
+        <!-- =========================
+             PRIORITY
+        ========================== -->
+
+        <div class="form-group">
+
+            <label>
+                Priority
+            </label>
+
+            <select
+                name="priority"
+                required
+            >
+
+                <option value="P0">
+                    P0
+                </option>
+
+                <option value="P1">
+                    P1
+                </option>
+
+                <option value="P2">
+                    P2
+                </option>
+
+                <option value="P3">
+                    P3
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- =========================
+             DESCRIPTION
+        ========================== -->
+
+        <div class="form-group">
+
+            <label>
+                Description
+            </label>
+
+
+            <div class="editor-container">
+
+
+                <!-- TOOLBAR -->
+
+                <div class="toolbar">
+
+                    <button
+                        type="button"
+                        onclick="insertMarkdown('bold')"
+                    >
+                        <b>B</b>
+                    </button>
+
+
+                    <button
+                        type="button"
+                        onclick="insertMarkdown('italic')"
+                    >
+                        <i>I</i>
+                    </button>
+
+
+                    <button
+                        type="button"
+                        onclick="insertMarkdown('code')"
+                    >
+                        Code
+                    </button>
+
+
+                    <button
+                        type="button"
+                        onclick="insertMarkdown('link')"
+                    >
+                        Link
+                    </button>
+
+
+                    <button
+                        type="button"
+                        onclick="insertMarkdown('ordered')"
+                    >
+                        1. List
+                    </button>
+
+
+                    <button
+                        type="button"
+                        onclick="insertMarkdown('unordered')"
+                    >
+                        • List
+                    </button>
+
+
+                    <button
+                        type="button"
+                        onclick="insertMarkdown('task')"
+                    >
+                        ☑ Task
+                    </button>
+
+                </div>
+
+
+                <!-- MARKDOWN TEXT AREA -->
+
+                <textarea
+                    id="descriptionEditor"
+                    name="description"
+                    placeholder="Write your issue description..."
+                    required
+                ></textarea>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             ASSIGNEE
+        ========================== -->
+
+        <!-- <div class="form-group">
+
+            <label>
+                Assignee
+            </label>
+
+            <select name="assignees" multiple size="4" class="form-control">
+
+                <option value="">
+                    Select Assignee
+                </option>
+
+                <option value="HritikGiri2005">
+                    HritikGiri2005
+                </option>
+
+            </select>
+
+        </div> -->
+
+        <div class="form-group">
+
+    <label>
+        Assignee
+    </label>
+
+    <select
+        name="assignees"
+        multiple
+        size="4"
+        class="form-control"
+    >
+
+        {% for user in assignees %}
+
+            <option value="{{ user.login }}">
+                {{ user.login }}
+            </option>
+
+        {% endfor %}
+
+    </select>
+
+    <small>
+        Hold Ctrl and select multiple users.
+    </small>
+
+</div>
+
+
+        <!-- =========================
+             LABEL
+        ========================== -->
+
+        <div class="form-group">
+
+            <label>
+                Label
+            </label>
+
+            <select name="label">
+
+                <option value="">
+                    Select Label
+                </option>
+
+                <option value="bug">
+                    Bug
+                </option>
+
+                <option value="feature">
+                    Feature
+                </option>
+
+                <option value="enhancement">
+                    Enhancement
+                </option>
+
+                <option value="documentation">
+                    Documentation
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- =========================
+             SUBMIT
+        ========================== -->
+
+        <button
+            type="submit"
+            class="submit-button"
+        >
+            Create GitHub Issue
+        </button>
+
+
+    </form>
+
+
+</div>
+
+
+<script>
+
+/*
+=========================================================
+GET DESCRIPTION TEXTAREA
+=========================================================
+*/
+
+const editor =
+    document.getElementById("descriptionEditor");
+
+
+/*
+=========================================================
+INSERT MARKDOWN
+=========================================================
+*/
+
+function insertMarkdown(type) {
+
+    const start =
+        editor.selectionStart;
+
+    const end =
+        editor.selectionEnd;
+
+    const selectedText =
+        editor.value.substring(start, end);
+
+
+    let before = "";
+
+    let after = "";
+
+    let defaultText = "text";
+
+
+    /*
+    =========================
+    BOLD
+    =========================
+    */
+
+    if (type === "bold") {
+
+        before = "**";
+
+        after = "**";
+
+        defaultText = "bold text";
+
+    }
+
+
+    /*
+    =========================
+    ITALIC
+    =========================
+    */
+
+    else if (type === "italic") {
+
+        before = "*";
+
+        after = "*";
+
+        defaultText = "italic text";
+
+    }
+
+
+    /*
+    =========================
+    CODE
+    =========================
+    */
+
+    else if (type === "code") {
+
+        before = "`";
+
+        after = "`";
+
+        defaultText = "code";
+
+    }
+
+
+    /*
+    =========================
+    LINK
+    =========================
+    */
+
+    else if (type === "link") {
+
+        before = "[";
+
+        after = "](https://example.com)";
+
+        defaultText = "link text";
+
+    }
+
+
+    /*
+    =========================
+    NUMBERED LIST
+    =========================
+    */
+
+    else if (type === "ordered") {
+
+        before = "1. ";
+
+        after = "";
+
+        defaultText = "List item";
+
+    }
+
+
+    /*
+    =========================
+    UNORDERED LIST
+    =========================
+    */
+
+    else if (type === "unordered") {
+
+        before = "- ";
+
+        after = "";
+
+        defaultText = "List item";
+
+    }
+
+
+    /*
+    =========================
+    TASK LIST
+    =========================
+    */
+
+    else if (type === "task") {
+
+        before = "- [ ] ";
+
+        after = "";
+
+        defaultText = "Task";
+
+    }
+
+
+    const text =
+        selectedText || defaultText;
+
+
+    editor.setRangeText(
+        before + text + after,
+        start,
+        end,
+        "select"
+    );
+
+
+    editor.focus();
+
+}
+
+</script>
+
+
+</body>
+
+</html>
